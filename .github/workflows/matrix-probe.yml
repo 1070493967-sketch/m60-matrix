@@ -1,0 +1,46 @@
+# M60 矩阵探针阵列 — GitHub Actions Worker
+# 无需VPS，使用GitHub免费算力并行探测
+name: M60 Matrix Probe Array
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'  # 每20分钟
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [arxiv.org, github.com, reuters.com, bbc.com, stackoverflow.com]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Quantum Probe
+        run: |
+          python3 -m pip install requests --quiet
+          python3 << 'PYEOF'
+          import requests, json, re, random, time
+          target = "${{ matrix.target }}"
+          results = []
+          ua = random.choice([
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0",
+              "Googlebot/2.1; +http://www.google.com/bot.html",
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+          ])
+          for path in ["", "trending", "hot", "latest", "popular"]:
+              url = f"https://{target}/{path}" if path else f"https://{target}/"
+              try:
+                  r = requests.get(url, headers={"User-Agent": ua}, timeout=8, stream=True)
+                  chunk = r.raw.read(4096)
+                  text = chunk.decode("utf-8", errors="ignore")
+                  titles = re.findall(r'<title[^>]*>(.*?)</title>', text, re.I)
+                  results.append({"url": url, "status": r.status_code, "title": titles[0][:100] if titles else ""})
+                  r.close()
+              except:
+                  pass
+              time.sleep(random.uniform(0.1, 0.5))
+          print(f"MATRIX_PROBE:{target}:{json.dumps(results)[:500]}")
+          PYEOF
