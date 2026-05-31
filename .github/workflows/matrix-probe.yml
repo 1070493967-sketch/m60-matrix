@@ -4,7 +4,7 @@ name: M60 Matrix Probe Array
 
 on:
   schedule:
-    - cron: '*/20 * * * *'  # 每20分钟
+    - cron: '*/5 * * * *'  # 每20分钟
   workflow_dispatch:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [arxiv.org, github.com, reuters.com, bbc.com, stackoverflow.com]
+        target: [arxiv.org, github.com, reuters.com, bbc.com, stackoverflow.com, news.ycombinator.com, qidian.com, zhihu.com, medium.com, wikipedia.org, baidu.com, douban.com, weibo.com, bilibili.com, reddit.com, nature.com, sciencedirect.com, ieee.org, acm.org, pubmed.gov]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
